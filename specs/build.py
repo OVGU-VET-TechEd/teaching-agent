@@ -281,6 +281,7 @@ def _nav_content(target_key: str, target: dict, agent: dict) -> str:
         "specs/agents/      ← agent personas    (read on :agent switch)",
         "specs/checklists/  ← quality checks    (read during :validate-course)",
         "specs/data/        ← LiaScript data    (read when working with LiaScript)",
+        "specs/course-input/← local course input (optional, never committed; read its README.md on activation)",
         "journal.md         ← current project state  (read on activation)",
         "materials/         ← generated course materials",
         "```",

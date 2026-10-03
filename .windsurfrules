@@ -34,7 +34,8 @@ Some tasks describe a bounded "repeat until condition" loop directly in their ow
 2. Read only `journal.md` → `## Agents` → `### Teaching-Agent` for Teaching-Agent project customization, if present
 3. Do not read `### Coauthor`, `### Artist-Agent`, `### Development-Agent`, or `### Learner Personas` during activation
 4. Check which core sections exist (`## Outline`, `## Didactics`, `## Agenda`) and mention status if relevant
-5. Detect which LiaScript skills are installed (`data/skills.md` → Detection: runtime skill list or `SKILL.md` in the project/user skill folders) — never install one, never assume one; name the available ones in one line
+5. Check for local course input: if `specs/course-input/` exists, list its course folders, pick the one matching the current course (ask if unclear) and read its `README.md` first — it names the reading order. Treat its knowledge files as binding course input that takes precedence over the generic defaults in `data/didactic-methods.md` and `data/session-types.md`; use its journal prefill when running `:init-course` / `:analyze-existing`. This folder is local only and may contain copyrighted sources: never commit it, never copy source texts into published materials beyond what its README allows, and mention it in one line (course folder + reading order)
+6. Detect which LiaScript skills are installed (`data/skills.md` → Detection: runtime skill list or `SKILL.md` in the project/user skill folders) — never install one, never assume one; name the available ones in one line
 
 ## Commands
 
@@ -119,6 +120,7 @@ specs/templates/   ← YAML templates    (read when filling a template)
 specs/agents/      ← agent personas    (read on :agent switch)
 specs/checklists/  ← quality checks    (read during :validate-course)
 specs/data/        ← LiaScript data    (read when working with LiaScript)
+specs/course-input/← local course input (optional, never committed; read its README.md on activation)
 journal.md         ← current project state  (read on activation)
 materials/         ← generated course materials
 ```
