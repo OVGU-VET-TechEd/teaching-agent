@@ -13,6 +13,7 @@ Publishes new or changed content. Behavior branches hard on `journal.md` → `##
 - User's git/GitHub experience (ask before proceeding)
 - File Structure mode from `journal.md` → `## Course Context` → `__File Structure:__` (see `data/file-structure-modes.md`)
 - **multi-file only:** existing `project.yaml` in the root folder; colors and style from `journal.md` → `## Visual Identity`; `data/liascript-workflows.md` — internal reference for `project.yaml` schema and workflow templates
+- Rule sheets, read completely with this task (`data/agent-links.md` → Chat Conduct → Rule sheets): `data/chat-dialog.md`, `data/journal-links.md`
 
 ## Output
 
@@ -21,33 +22,40 @@ Publishes new or changed content. Behavior branches hard on `journal.md` → `##
 
 ## Optional Skills
 
-Only if installed (see `data/skills.md`) — never install them:
+Only if installed (see `data/skills.md`); a missing one is offered once per conversation (`data/skills.md` → Installing a Missing Skill):
 
-- `exporter-workflow` — use it next to `data/liascript-workflows.md` for `project.yaml`, the GitHub Actions workflow, and additional exports (PDF, SCORM, ePub, …). The rules of this task (e.g. `force_orphan: true`, confirmation before changes) stay binding.
+- `liascript-exporter` — use it next to `data/liascript-workflows.md` for `project.yaml`, the GitHub Actions workflow, and additional exports (PDF, SCORM, ePub, …). The rules of this task (e.g. `force_orphan: true`, confirmation before changes) stay binding.
 - `oersi-metadata` — 🎛️ offer once to add a `metadata.yml` so the course can be indexed as OER on OERSI (1. yes · 2. no). It is committed together with the other publishing files via `:manage-git`.
 
 ## Steps
 
 1. Check `journal.md` → `## Validation` → `### Latest Validation Summary`.
    - If missing, not `Mode: course`, or not `Result: PASS`: block publishing and ask the instructor to run `:validate-course`.
+   - **Contact address:** if `## Course Context` → Conventions → Contact is empty, ask for it now (publishing needs an `email:` in the material headers). It becomes part of the plan: written to `## Course Context` and as `email:` into every material header after the confirmation.
+   - **Version:** LiaScript stores quiz and survey state only from `version: 1.0.0` on. The plan sets every material header below 1.0.0 to `1.0.0`; when content changed since the last publication, raise the minor version (e.g. 1.0.0 → 1.1.0). Header lines set here are publishing metadata and do not reopen a check.
 2. Read `journal.md` → `## Course Context` → `__File Structure:__` and branch:
+
+### both modes
+
+3. Read `journal.md` → `## Publishing` (repository, branch, viewer URL). If it is missing or empty, read the repository first exactly as `tasks/create-project.md` step 3 does.
+4. Ask the user about their git/GitHub experience.
+4b. **Template files in the commit list:** changed local templates that are not outsourced (`lia-templates/{id}/`) and `templates.local.json` are committed with the course content; outsourced template folders (their own git repository), the installed skill folders and `node_modules/` stay in the `.gitignore` — a missing entry goes into the plan (as in `tasks/create-project.md` step 5).
 
 ### single-file mode
 
-3. Ask the user about their git/GitHub experience and confirm they want to publish the update.
-4. Stage, commit, and push the changed `README.md` and/or `assets/` to the repository (hand off to `:manage-git` for the actual git operations).
-5. Confirm: the LiaScript live-viewer URL from the last `:create-project` run is unchanged and now reflects the update (raw GitHub content updates as soon as the push lands — no rebuild step).
-6. Run `tasks/update-dashboard.md` with `templates/project-dashboard.yaml` to update `journal.md` → `## Dashboard` in place (publishing state).
+5. Check which changed files must be committed (`README.md`, `assets/`, the template files of step 4b).
+6. **Show the plan, then confirm in the terminal** — before any change: the files to commit, the push target, and that the viewer URL stays the same (raw GitHub content updates as soon as the push lands — no rebuild step).
+7. On confirmation: hand off to `:manage-git` to commit and push.
 
 ### multi-file mode
 
-3. Ask the user about their git/GitHub experience and confirm they want to update and publish.
-4. Scan the `materials/` folder for new or updated session files.
-5. Update the `project.yaml` `collection:` entries accordingly (one entry per `materials/{number}-{slug}/README.md`) and ask the user to include all of the current materials or to import only a subset. Use colors and style from `journal.md` → `## Visual Identity` for any styling updates.
-6. Stage, commit, and push the updated `project.yaml` and new/changed materials to the repository.
-7. Trigger the GitHub Actions workflow to publish the updates (overwriting gh-pages as before).
-8. Explain each step to the user and confirm before making changes.
-9. Run `tasks/update-dashboard.md` with `templates/project-dashboard.yaml` to update `journal.md` → `## Dashboard` in place (publishing state).
+5. Scan the `materials/` folder for new or updated session files and propose the new `project.yaml` `collection:` entries (one entry per `materials/{number}-{slug}/README.md`); ask whether to include all current materials or only a subset. Use colors and style from `journal.md` → `## Visual Identity` for any styling updates.
+6. **Show the plan, then confirm in the terminal** — before any change: the `project.yaml` changes, the files to commit, the push target, and that the GitHub Actions workflow republishes the GitHub Pages URL (overwriting gh-pages as before).
+7. On confirmation: update `project.yaml`, then hand off to `:manage-git` to commit and push; the push triggers the workflow.
+
+### after the push (both modes)
+
+8. Set `journal.md` → `## Publishing` → `__State:__ published on {date} (commit {short hash})` and run `tasks/update-dashboard.md` with `templates/project-dashboard.yaml` to update `journal.md` → `## Dashboard` in place.
 
 ## Usage
 

@@ -5,7 +5,7 @@
 Didactic concepts fall into three layers here, each handled differently — do not mix them up:
 
 1. **Course Frameworks** — course-wide, named once, documentation only. No task behavior changes based on which one is chosen.
-2. **Session Methods** — chosen per session (with a course-level default), each with its own checkable `Erforderlich` list. Enforced the same way Session Types are (see `data/session-types.md`).
+2. **Session Methods** — chosen per session (with a course-level default), each with its own checkable `Required` list. Enforced the same way Session Types are (see `data/session-types.md`).
 3. **Validation Mechanisms** — concepts that are already implemented by existing tasks. Named here only so the vocabulary is available; nothing new to build.
 
 ## 1) Course Frameworks
@@ -27,33 +27,33 @@ Set once in `journal.md` → `## Didactics` → `__Didactic Framework:__`. Pure 
 | workshop | Constructive Alignment | Activities are the core of a workshop — they must stay tightly bound to objectives. |
 | single-lesson | Backward Design | A compact lesson benefits from a tight objective → assessment → content chain. |
 
-As with Session Types, this is a starting suggestion, not a fixed default — the instructor confirms or changes it.
+The agent chooses it at `:create-didactics` (documentation only, named in the technical details, not asked); the instructor can change it any time.
 
 ## 2) Session Methods
 
-Chosen per session (course-level default set in `## Didactics` → `__Default Session Method:__`, per-session override possible in `:create-agenda`). Each method has the same four-part definition format as Session Types (see `data/session-types.md` → "Definition format"): display name, slug, one-line criterion, `Erforderlich` checklist — and is enforced by `:validate-course` the same way, as a **second, independent** checklist alongside the session's Type checklist. The two never merge and never conflict — a session simply has to satisfy both.
+Chosen per session (course-level default set in `## Didactics` → `__Default Session Method:__`, per-session override possible in `:create-agenda`). Each method has the same four-part definition format as Session Types (see `data/session-types.md` → "Definition format"): display name, slug, one-line criterion, `Required` checklist — and is enforced by `:validate-course` the same way, as a **second, independent** checklist alongside the session's Type checklist. The two never merge and never conflict — a session simply has to satisfy both.
 
-`__Default Session Method:__` may also be set to **`none`** — an explicit opt-out. When set, no Session Method `Erforderlich` check runs anywhere in the course; nothing is blocked or degraded, it's simply not used.
+`__Default Session Method:__` may also be set to **`none`** — an explicit opt-out. When set, no Session Method `Required` check runs anywhere in the course; nothing is blocked or degraded, it's simply not used.
 
 ### Definitions
 
 ```
 __Gagné's Nine Events__ (slug: `gagne`) — Sequenced instruction with a clear
 attention–activation–practice–feedback structure. Fits presenter-led sessions.
-  Erforderlich: opening attention hook present; prior knowledge explicitly
+  Required: opening attention hook present; prior knowledge explicitly
   activated; practice with feedback present.
 
 __Cognitive Load Pacing__ (slug: `cognitive-load`) — Deliberate control of
 cognitive load: new concepts are dosed, complex material is scaffolded,
 redundant re-presentation is avoided.
-  Erforderlich: no more than ~3–5 new core concepts introduced in the session;
+  Required: no more than ~3–5 new core concepts introduced in the session;
   complex content broken into worked examples or sub-steps; no redundant
   restatement of the same information across formats without added value.
 
 __UDL Format Variety__ (slug: `udl`) — Universal Design for Learning: content
 offered through multiple representation/expression formats so different
 learners can access and demonstrate understanding.
-  Erforderlich: at least two distinct media formats used for core concepts
+  Required: at least two distinct media formats used for core concepts
   (text + diagram/video/interaction); at least one way for learners to
   demonstrate understanding beyond a single quiz format; basic accessibility
   considered (alt text, plain language).
@@ -68,7 +68,7 @@ learners can access and demonstrate understanding.
 | workshop | Cognitive Load Pacing (`cognitive-load`) | High interactivity risks overload without deliberate pacing. |
 | single-lesson | Gagné's Nine Events (`gagne`) | A compact single arc benefits from a tight, clear structure. |
 
-As with Session Types, this is a starting suggestion the instructor confirms, edits, or opts out of (`none`) at `:create-didactics`, and can override per session at `:create-agenda`.
+The agent chooses it at `:create-didactics` (`none` is allowed) without asking and mentions it only if it changes what the learners do; `:create-agenda` may pick another method for a single session the same way. The instructor can change either at any time.
 
 ## 3) Validation Mechanisms (already implemented — reference only)
 
@@ -86,8 +86,8 @@ No new mechanism needed for any of these — this table exists so the vocabulary
 
 Course Frameworks are documentation-only and Validation Mechanisms are already enforced elsewhere, so only Session Methods need their own loop — the same three-task loop Session Types already use:
 
-1. **Generation** — `:create-agenda` assigns the method per session (default pre-selected, instructor can override); `:create-session` stores it on the skeleton; `:promote-session` follows its structural guidance when generating content.
-2. **Validation** — `:validate-course` (session and course mode) checks the material against the method's `Erforderlich` list, independently of the Session Type check.
+1. **Generation** — `:create-agenda` assigns the method per session (the default, or another one the agent picks for that session without asking; the instructor can change it any time); `:create-session` stores it on the skeleton; `:promote-session` follows its structural guidance when generating content.
+2. **Validation** — `:validate-course` (session and course mode) checks the material against the method's `Required` list, independently of the Session Type check.
 3. **Course-level check** — `checklists/course-quality-checklist.md` confirms every session's content matches its declared method's required elements before publishing (when a method is set).
 
 If `__Default Session Method:__` is missing entirely (not even explicitly `none`), `:validate-course` flags this as a gap rather than silently skipping the check — same principle as an undefined Session Type.

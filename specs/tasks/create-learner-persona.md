@@ -14,10 +14,11 @@ and serve as the basis for `:review-as-persona` feedback sessions.
 ## Inputs
 
 - Name (optional — agent suggests if not provided)
-- Target audience from `journal.md` → `## Outline` (`__Target Audience:__` bullet)
+- Target audience from `journal.md` → `## Outline` (the field with `data-key="target-audience"`; in older journals the `__Target Audience…:__` bullet)
 - Difficulty level, course type, and style from `journal.md` → `## Didactics`
 - `templates/agents.yaml` — used if `journal.md` → `## Agents` does not exist yet
 - Optional: research data provided by instructor (for data-driven mode)
+- Rule sheets, read completely with this task (`data/agent-links.md` → Chat Conduct → Rule sheets): `data/chat-dialog.md`, `data/journal-links.md`
 
 ## Output
 
@@ -41,7 +42,7 @@ and serve as the basis for `:review-as-persona` feedback sessions.
 5. Extract key characteristics from the target audience description in `journal.md` → `## Outline`.
 6. Build a realistic profile covering all 7 dimensions (see **Persona Structure** below).
 7. Mark clearly which values are inferred/assumed vs. drawn from the docs.
-8. Proceed to Step 10.
+8. Proceed to Step 9.
 
 ---
 
@@ -64,6 +65,7 @@ and serve as the basis for `:review-as-persona` feedback sessions.
    7. Prior knowledge gaps: concepts, terms, and skills typically missing at course start
    **Desired outcome:** Statistics per dimension with source and year; flag where no specific data exists (use proxy data if noted)
    **Search suggestions:**
+   - Pick sources that fit the target group — apprentices (e.g. the examples below), school learners (school and education statistics), adults (adult education surveys):
    - `[audience] Ausbildung Statistik [year]`
    - `BIBB [occupation] Auszubildende`
    - `[region] Berufsausbildung Digitalnutzung Jugendliche`
@@ -73,26 +75,26 @@ and serve as the basis for `:review-as-persona` feedback sessions.
 
 6. Wait for instructor to provide research findings (paste or describe).
 7. Once data is provided: build persona from the data, flagging proxies vs. direct evidence.
-8. Proceed to Step 10.
+8. Proceed to Step 9.
 
 ---
 
-10. Generate persona section using the **Persona Structure** template (see below).
-11. Display a 3-line summary and 🎛️ ask for confirmation:
-    > "Persona [Icon] [Name] created. [Brief summary]. Save to `journal.md` → `## Agents` → `### Learner Personas`? (Yes / Adjust)"
-12. On approval: save to `journal.md` → `## Agents` → `### Learner Personas`.
+9. Generate persona section using the **Persona Structure** template (see below).
+10. Show the complete persona exactly as it will be saved — every dimension, with inferred values marked as such — and 🎛️ ask for confirmation ("Nothing unseen gets saved", `data/agent-links.md`):
+    > "This is [Icon] [Name] as I would save it. Save to the learner personas? (Save / Change something)"
+11. On approval: save to `journal.md` → `## Agents` → `### Learner Personas`.
     - If `## Agents` does not exist: create it from `templates/agents.yaml`
     - If `### Learner Personas` does not exist inside `## Agents`: create that subsection
-    - Append as a new `#### Persona: {icon} {name}` subsection, wrapped in `<section>…</section>` per the **Persona Structure** template below
-13. Run `tasks/update-dashboard.md` with `templates/project-dashboard.yaml` to update `journal.md` → `## Dashboard` in place.
-14. Suggest next step:
-    > "Persona saved. Call `:review-as-persona [Name] [number] [type]` to use [Icon] [Name] as a reviewer for a session."
+    - Append as a new `#### Persona: {icon} {name}` subsection: the `####` heading stays outside, everything below it is wrapped in `<section>…</section>`, as in the **Persona Structure** template below
+12. Run `tasks/update-dashboard.md` with `templates/project-dashboard.yaml` to update `journal.md` → `## Dashboard` in place.
+13. Suggest next step:
+    > "Persona saved. [Icon] [Name] can now review a unit: `:agent learner` → `:review-as-persona [Name] [number]`."
 
 ---
 
 ## Persona Structure
 
-Each persona is one `####` subsection inside `journal.md` → `## Agents` → `### Learner Personas` — never use `##` or `###` inside a persona entry (they would terminate the target container) and never go deeper than `#####`. Wrap the whole entry in `<section>…</section>` (same technique as `#### Images` in `tasks/create-image.md`), so LiaScript shows the persona as one slide instead of splitting on every `#####` subheading — see `data/liascript-cheat-sheet.md` → "Additional Rule: Subheadings within a Slide":
+Each persona is one `####` subsection inside `journal.md` → `## Agents` → `### Learner Personas` — never use `##` or `###` inside a persona entry (they would terminate the target container) and never go deeper than `#####`. Write the `#####` headings of the structure in the course language. Wrap everything below the `####` heading in `<section>…</section>` (same technique as `#### Images` in `tasks/create-image.md`), so LiaScript shows the persona as one slide instead of splitting on every `#####` subheading — see `data/liascript-cheat-sheet.md` → "Additional Rule: Subheadings within a Slide":
 
 ```markdown
 #### Persona: [Icon] [Name]
@@ -122,11 +124,11 @@ Includes: age, background, where they are in their training, attitude toward lea
 
 *[Source / Assumption note]*
 
-##### 3. Training & Work Context
-- Training structure: ... (e.g., block schedule, weeks per block)
-- Typical work day / schedule: ...
-- Commute / accessibility: ...
-- Financial situation: ...
+##### 3. Learning Context
+- Learning setting: ... (e.g., school timetable, block schedule, part-time course alongside work)
+- Typical day / schedule: ...
+- Where and with which device they learn: ...
+- Other circumstances that matter for learning (only where known — e.g. work, family, money): ...
 
 *[Source / Assumption note]*
 

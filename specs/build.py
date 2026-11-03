@@ -35,6 +35,7 @@ BUNDLE_ORDER = [
     ("checklists", True),
     ("data", True),
     ("workflows", True),
+    ("catalog/templates.json", False),
 ]
 
 TARGETS = {
@@ -88,21 +89,32 @@ def _read_file_bundle(file: Path, name: str) -> str:
 
     if name.endswith(".yaml"):
         content = f"```yaml\n{content}\n```"
+    elif name.endswith(".json"):
+        content = f"```json\n{content}\n```"
 
     if name.startswith("agents/"):
+        generic = "".join([
+            "  - ONLY load dependency files when explicitly invoked\n",
+            "  - The agent.customization field ALWAYS takes precedence\n",
+            "  - Always show numbered lists for options\n",
+            "  - Always clarify missing inputs with follow-up questions\n",
+            "  - STAY IN CHARACTER!\n",
+        ])
+        body = content.replace("```yaml", "")
+        # Agents with their own activation-instructions get the generic rules merged in, not a duplicate key.
+        key = re.compile(r"^activation-instructions:\n", re.M)
+        if key.search(body):
+            head, body = "", key.sub(lambda match: match.group(0) + generic, body, count=1)
+        else:
+            head = "activation-instructions:\n" + generic
         content = "".join([
             "## Agent Definition\n\n",
             "CRITICAL: Read the full YAML, start activation to alter your state of being, "
             "follow startup section instructions, stay in this being until told to exit this mode:",
             "\n\n",
             "```yaml\n",
-            "activation-instructions:\n",
-            "  - ONLY load dependency files when explicitly invoked\n",
-            "  - The agent.customization field ALWAYS takes precedence\n",
-            "  - Always show numbered lists for options\n",
-            "  - Always clarify missing inputs with follow-up questions\n",
-            "  - STAY IN CHARACTER!\n",
-            content.replace("```yaml", ""),
+            head,
+            body,
         ])
 
     if content and name != MAIN_MD:
@@ -245,12 +257,16 @@ def _nav_content(target_key: str, target: dict, agent: dict) -> str:
     suggest_artist  = coord.get("suggest_artist_when") or []
     suggest_learner = coord.get("suggest_learner_when") or []
     suggest_dev     = coord.get("suggest_development_when") or []
-    if suggest_artist or suggest_learner or suggest_dev:
+    suggest_try     = coord.get("suggest_try_as_learner_when") or []
+    suggest_tpl     = coord.get("suggest_templates_when") or []
+    if suggest_artist or suggest_learner or suggest_dev or suggest_try or suggest_tpl:
         lines += ["## Agent Coordination", ""]
         for label, items in [
             ("Suggest `:agent artist`", suggest_artist),
             ("Suggest `:agent learner`", suggest_learner),
             ("Suggest `:agent development`", suggest_dev),
+            ("Offer `:suggest-templates`", suggest_tpl),
+            ("Offer `:try-as-learner`", suggest_try),
         ]:
             if items:
                 lines.append(f"**{label}:**")
@@ -281,9 +297,12 @@ def _nav_content(target_key: str, target: dict, agent: dict) -> str:
         "specs/agents/      ← agent personas    (read on :agent switch)",
         "specs/checklists/  ← quality checks    (read during :validate-course)",
         "specs/data/        ← LiaScript data    (read when working with LiaScript)",
+        "specs/catalog/     ← template catalog  (templates.json read-only; search.mjs; page README.md)",
         "specs/course-input/← local course input (optional, never committed; read its README.md on activation)",
         "journal.md         ← current project state  (read on activation)",
         "materials/         ← generated course materials",
+        "lia-templates/     ← own templates in development (one folder per template)",
+        "templates.local.json ← project template list (found / own entries)",
         "```",
         "",
     ]

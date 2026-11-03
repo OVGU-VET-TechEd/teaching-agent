@@ -75,7 +75,7 @@ The **Teaching-Agent** is the coordinator. It knows when to hand off to the othe
 | **Teaching** | 🎓 | Pedagogical structure & content (default) | active on start |
 | **Artist** | 🎨 | Visual identity, logos, image prompts | `:agent artist` |
 | **Learner** | 🧑‍🎓 | Persona-based, learner-perspective review | `:agent learner` |
-| **Development** | 🛠️ | Git, publishing, GitHub Pages | `:agent development` |
+| **Development** | 🛠️ | Git, own templates (build, test, publish), publishing, GitHub Pages | `:agent development` |
 
 The Teaching-Agent proactively suggests a handoff at the right moments — e.g. `:agent artist` after didactics are done, `:agent learner` after a session is validated, or `:agent development` once the course passes validation.
 
@@ -117,16 +117,13 @@ flowchart TD
     DEV["**SESSIONS** (iterative or batch)<br/>:create-session → :promote-session<br/>:coauthor-materials → :validate-course<br/>🧑‍🎓 :review-as-persona (optional)"]
     VAL["**VALIDATION** · :validate-course<br/>→ Validation (PASS / FAIL gate)"]
     PUB["🛠️ :create-project · :manage-git<br/>(optional, gated on PASS)"]
-    BUNDLE["**BUNDLE** · :assemble-bundle<br/>→ course-bundle/"]
 
     INIT --> OUTLINE --> DID --> VIS --> AGENDA --> DEV --> VAL
     DID -.->|optional| PERSONA -.-> VIS
     VAL -->|PASS| PUB
-    VAL -->|PASS| BUNDLE
     INIT -.->|improve-existing| ANALYZE[":analyze-existing"] -.-> DEV
 
     style INIT fill:#0B6E75,color:#fff
-    style BUNDLE fill:#FF8C42,color:#fff
     style VIS fill:#6B4E9B,color:#fff
     style PERSONA fill:#6B4E9B,color:#fff
     style PUB fill:#2E7D32,color:#fff
@@ -155,7 +152,7 @@ If you already know what you want, `:scaffold` replaces `:init-course → :creat
 
 ### Publishing gate
 
-Publishing (`:create-project`, `:update-project`) and bundling (`:assemble-bundle`) are **blocked until** `:validate-course` records `Mode: course` + `Result: PASS` in `## Validation`. This keeps half-finished courses from being shipped.
+Publishing (`:create-project`, `:update-project`) is **blocked until** `:validate-course` records `Mode: course` + `Result: PASS` in `## Validation`. This keeps half-finished courses from being shipped.
 
 ---
 
@@ -240,7 +237,7 @@ In every environment the agent introduces itself, reads `journal.md` if it exist
 browser with a chat on top, and every action link in it talks to your agent:
 
 ```markdown
-[▶ Build session 3](agent:teaching/build-session?number=3&type=module) `:build-session 3 module` — material missing
+[▶️ Build session 3](agent:teaching/build-session?number=3) `:build-session 3` — material missing
 ```
 
 A click sends `agent:<agent>/<command>?<parameters>` to the running agent — `teaching`,
@@ -253,10 +250,24 @@ The chat shows which agent you are talking to (🎓 Teaching, 🎨 Artist, 🧑�
 🛠️ Development). Switch with its menu or a link like `[🎨 Artist](agent:artist/switch)`;
 what you type goes to the agent shown there.
 
-Links appear in the Dashboard (Next Commands, an Agents card, the next step of every
-session, open blockers) and as one action line below each section heading. They are written
-by `:update-dashboard`; the format is defined in
-[`specs/data/agent-links.md`](specs/data/agent-links.md).
+Links appear in the Dashboard (the one recommended next step, further options, open points)
+and as one action line below each section heading. The Dashboard is a JSON data block that
+the local LiaScript library [`specs/dashboard/`](specs/dashboard/README.md) renders via
+`@Dashboard.View`; it and the action lines are written by `:update-dashboard`, the link format
+is defined in [`specs/data/journal-links.md`](specs/data/journal-links.md), the handling of clicks and
+the chat rules in [`specs/data/agent-links.md`](specs/data/agent-links.md) and its topic sheets. The agent writes the
+data block only through `node specs/dashboard/write-dashboard.mjs <draft.json>` (checks the
+draft, replaces the block in one write, then validates); `node specs/dashboard/validate-journal.mjs`
+checks it on its own, including every `#` link against the real LiaScript heading anchors and
+raw placeholders in visible commands.
+
+To try a unit the way learners see it, `:try-as-learner {number}` opens the learner view of
+the preview with a learning companion (a historical teacher via `find_teacher`, or the course's
+guiding figure); it exists only in the preview, learners get no chat with published material.
+
+**Checks for the specs themselves:** `node --test specs/check-specs.mjs` guards the key rules
+found in the tandem tests against regressions (and scenario data leaking into the specs);
+`node specs/dashboard/check.mjs` tests the Dashboard library.
 
 **Setup**
 
@@ -272,7 +283,8 @@ by `:update-dashboard`; the format is defined in
      (Codex: raise `tool_timeout_sec`, a confirmation waits for your click). They receive
      clicks through the `wait_for_event` tool.
 4. `:preview` opens `journal.md` in the browser; `:preview materials/03-…/README.md` shows a
-   session's material.
+   session's material. `:open-chat` opens the browser chat (and the preview, if no browser is
+   connected) and greets you there with the next step.
 
 What happens in the browser ends up as a prompt for your agent. The agent therefore only runs
 commands from its own command list, confirms every change in the chat, and asks in the
@@ -284,20 +296,22 @@ terminal before anything touches git or publishing.
 
 The agents use the [LiaScript skills](https://github.com/LiaScript/skills) when they are
 installed — in the project (`.claude/skills/`, `.agents/skills/`, …) or for your user
-(`~/.claude/skills/`, `~/.agents/skills/`, …). They never install a skill themselves and
-work without them, too.
+(`~/.claude/skills/`, `~/.agents/skills/`, …). They work without them, too; if a missing
+skill clearly helps the current step, they ask once per conversation and install it into
+the project only after your consent in the terminal (never globally).
 
 | Skill | Used by | Where |
 |---|---|---|
 | `liascript-syntax` | 🎓 Teaching | writing, fixing and validating materials |
 | `reference-checker` | 🎓 Teaching | checking a session's references during validation |
-| `template-development` | 🎓 Teaching | building your own template in `:manage-templates` |
+| `liascript-templates` | 🎓 Teaching | judging templates and writing a brief for an own one in `:suggest-templates`, `:manage-templates` |
 | `creativity` | 🎓 Teaching | optional open ideation in `:create-outline` and `:scaffold` |
 | `liascript-theming` | 🎨 Artist | a LiaScript theme from the visual identity in `:create-visuals` |
-| `exporter-workflow` | 🛠️ Development | `project.yaml`, GitHub Actions, exports |
+| `liascript-templates` | 🛠️ Development | building and testing an own template in `:develop-template` (required there) |
+| `liascript-exporter` | 🛠️ Development | `project.yaml`, GitHub Actions, exports |
 | `oersi-metadata` | 🛠️ Development | `metadata.yml` to list the course on OERSI |
 
-Install them yourself if you want them, e.g. `npx skills add LiaScript/skills`.
+You can also install them yourself, e.g. `npx -y skills add LiaScript/skills --skill liascript-syntax`.
 Details: [`specs/data/skills.md`](specs/data/skills.md).
 
 ---
@@ -315,15 +329,16 @@ Details: [`specs/data/skills.md`](specs/data/skills.md).
 | `:create-didactics` | Teaching concept, instructor persona, difficulty |
 | `:create-learner-persona {name?}` | Build an evidence-based learner persona |
 | `:create-agenda` | Structure sessions / modules |
-| `:manage-templates {name?}` | Add & document LiaScript template imports |
+| `:suggest-templates {activity?}` | After the didactics: templates for the learning activities from the catalog and an online search — adopt, try, or write a brief for an own one |
+| `:manage-templates {name?}` | Add & document LiaScript template imports (also by catalog id, or adopt an own template once it is ready to test) |
 | `:update-dashboard` | Regenerate the derived `## Dashboard` and the action links in `journal.md` |
 | `:preview {file?} {slide?}` | Show `journal.md` or a material file in the LiaScript DevServer preview |
-| `:create-session {n} {type} {title?}` | Create a session skeleton |
-| `:promote-session {n} {type}` | Expand skeleton into a material document (`materials/{n}-{slug}/README.md` in multi-file mode, or a `##` chapter in root `README.md` in single-file mode — see `specs/data/file-structure-modes.md`) |
+| `:open-chat` | Open the browser chat of the DevServer preview (every agent) |
+| `:create-session {n} {title?}` | Create a session skeleton |
+| `:promote-session {n}` | Expand skeleton into a material document (`materials/{n}-{slug}/README.md` in multi-file mode, or a `##` chapter in root `README.md` in single-file mode — see `specs/data/file-structure-modes.md`) |
 | `:coauthor-materials` | Interactive content co-authoring in persona |
-| `:quick-fix {n} {type} {description}` | Targeted single-issue correction |
-| `:validate-course [{n} {type}]` | Full course check, or single-session check |
-| `:assemble-bundle` | Package everything into `course-bundle/` |
+| `:quick-fix {n} {description}` | Targeted single-issue correction |
+| `:validate-course [{n}]` | Full course check, or single-session check |
 | `:save-notes {type?} {title?}` | Save a summary / research / decision note |
 | `:save-decision {title}` | Save a structured decision record (ADR) |
 | `:configure-agent {agent}` | Customize an agent's behavior in `journal.md` |
@@ -342,16 +357,22 @@ Details: [`specs/data/skills.md`](specs/data/skills.md).
 
 | Command | Purpose |
 |---------|---------|
-| `:review-as-persona {name} {n} {type}` | Review a material as a specific learner persona |
+| `:review-as-persona {name} {n}` | Review a material as a specific learner persona |
 | `:list-learners` | List defined learner personas |
 
 ### Development-Agent 🛠️
+
+The Git, Templates & Publishing Assistant: version control and publishing, and own LiaScript templates —
+it builds a template from the Teaching-Agent's brief in `lia-templates/{id}/`, tests it with you in the
+preview, hands it back as *ready to test* and, if you decide so, publishes it as its own repository.
 
 | Command | Purpose |
 |---------|---------|
 | `:manage-git` | Stage, commit, push, diff, resolve conflicts |
 | `:create-project` | Multi-file: generate `project.yaml` + GitHub Pages workflow. Single-file: push to GitHub, hand back the LiaScript viewer link (no project.yaml/Pages) |
 | `:update-project` | Multi-file: update publishing config & redeploy. Single-file: push the update (viewer link stays the same) |
+| `:develop-template {id}` | Build and test an own template from its brief in `lia-templates/{id}/` (README with macros and examples, JS/CSS, model tests) until you confirm its acceptance points; needs the skill `liascript-templates` |
+| `:publish-template {id}` | Optional, after the adoption: publish the template as its own GitHub repository (topic `liascript-template`, version tag) and switch the course imports to that tag; confirmed in the terminal |
 
 ---
 
@@ -368,9 +389,12 @@ specs/
   checklists/          ← quality checks (used by :validate-course)
   data/                ← LiaScript cheat-sheet & workflow reference
   workflows/           ← course-development.yaml (the master workflow)
+  catalog/             ← template catalog: page README.md, templates.json (shared list), search.mjs (online search)
 
 journal.md             ← project state (single source of truth)
 materials/             ← generated LiaScript course materials (multi-file mode only)
+lia-templates/         ← own templates in development, one folder per template
+templates.local.json   ← project template list (found / own entries; never overwritten by updates)
 assets/                ← generated visual assets & prompts (single-file mode; nested per session under materials/ in multi-file mode)
 
 CLAUDE.md              ← generated: Claude Code config
@@ -413,7 +437,6 @@ dist/web-bundle.md     ← generated: paste-anywhere bundle
 
 :agent teaching → :validate-course        # full course → PASS
 :agent development → :create-project       # publish to GitHub Pages
-:assemble-bundle                           # distributable package
 ```
 
 ---
